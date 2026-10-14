@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rotation Station</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EAF0F6; --ink:#14213D; --muted:#4E5F78; --card:#FFFFFF; --line:#CBD5E1;
+  --pre:#7C8AA5; --img:#D6336C; --gold:#F2A900; --blue:#2457D6; --ok:#146C3B; --bad:#B02A20;
+  --okbg:#E3F5EA; --badbg:#FBE7E4; --hintbg:#FFF4D6;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Atkinson Hyperlegible","Segoe UI",Verdana,sans-serif;font-size:18px;line-height:1.5}
+h1,h2,h3{font-family:"Sora","Trebuchet MS",sans-serif;line-height:1.2;margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding:16px}
+header.top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between;padding:8px 0 12px}
+header.top h1{font-size:2rem}
+header.top p{margin:2px 0 0;color:var(--muted);font-size:1rem;max-width:44ch}
+.langs{display:flex;gap:6px}
+.langs button{border:2px solid var(--ink);background:#fff;border-radius:8px;padding:6px 14px;cursor:pointer;font-weight:700}
+.langs button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.who{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:end;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:10px 14px}
+.who label{display:flex;flex-direction:column;font-size:.9rem;color:var(--muted);gap:2px}
+.who input{border:2px solid var(--line);border-radius:8px;padding:6px 10px;background:#fff;min-width:0}
+.who input#nm{width:min(260px,70vw)}
+.who input#pd{width:90px}
+.nudge{color:var(--bad);font-size:.95rem;align-self:center;margin:0}
+.starsbar{margin-left:auto;font-weight:700;align-self:center;white-space:nowrap}
+nav.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+nav.tabs button{border:2px solid var(--ink);background:#fff;border-radius:10px;padding:8px 18px;cursor:pointer;font-weight:700}
+nav.tabs button[aria-selected="true"]{background:var(--ink);color:#fff}
+.tab{display:none}
+.tab.on{display:block}
+.panel{display:grid;grid-template-columns:minmax(0,560px) minmax(280px,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.panel{grid-template-columns:1fr}}
+.card{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:14px 16px}
+.card + .card{margin-top:14px}
+canvas{display:block;width:100%;height:auto;border-radius:10px;border:2px solid var(--ink);background:#fff;touch-action:manipulation;cursor:crosshair}
+h2{font-size:1.3rem;margin-bottom:6px}
+h3{font-size:1.05rem;margin-bottom:6px}
+.help{color:var(--muted);font-size:.98rem;margin:0 0 8px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{border:2px solid var(--ink);background:#fff;border-radius:10px;padding:8px 14px;cursor:pointer;font-weight:700;min-height:44px}
+.btn:hover{background:#F2F5FA}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover{background:#1B44AD}
+.btn[aria-pressed="true"]{background:var(--gold);border-color:var(--ink)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.angle{font-family:"Sora",sans-serif;font-size:1.5rem;color:var(--img);margin:4px 0}
+input[type=range]{width:100%;accent-color:var(--img);height:32px}
+table{border-collapse:collapse;width:100%;font-size:1rem}
+th,td{border-bottom:1px solid var(--line);padding:4px 8px;text-align:left}
+th{color:var(--muted);font-weight:700}
+.rulebox{background:var(--hintbg);border-radius:10px;padding:8px 12px;margin-top:10px}
+.rulebox b{font-family:"Sora",sans-serif}
+.pre{color:var(--pre);font-weight:700}
+.img{color:var(--img);font-weight:700}
+.fb{min-height:3.2em;border-radius:10px;padding:8px 12px;margin-top:10px;background:#F2F5FA}
+.fb.ok{background:var(--okbg);color:var(--ok)}
+.fb.bad{background:var(--badbg);color:var(--bad)}
+.fb.warn{background:var(--hintbg)}
+.xy{display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-top:10px}
+.xy label{display:flex;flex-direction:column;font-size:.9rem;color:var(--muted)}
+.xy input{width:76px;border:2px solid var(--line);border-radius:8px;padding:6px 8px}
+.prog{font-weight:700;color:var(--muted)}
+.rules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.rule{background:#fff;border:2px solid var(--line);border-radius:14px;padding:14px 16px}
+.rule .f{font-family:"Sora",sans-serif;font-size:1.35rem;margin:8px 0;color:var(--img)}
+.real{display:grid;gap:14px}
+.q{background:#fff;border:2px solid var(--line);border-radius:14px;padding:14px 16px}
+.q p{margin:0 0 10px;font-size:1.1rem}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opts .btn.right{background:var(--okbg);border-color:var(--ok);color:var(--ok)}
+.opts .btn.wrong{background:var(--badbg);border-color:var(--bad);color:var(--bad)}
+.sum{background:var(--okbg);border:2px solid var(--ok);border-radius:14px;padding:14px 16px;margin-top:14px;font-weight:700}
+.hide{display:none!important}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div>
+    <h1 data-t="title">Rotation Station</h1>
+    <p data-t="sub"></p>
+  </div>
+  <div class="langs" role="group" aria-label="Language / Idioma">
+    <button id="lang-en" aria-pressed="true">English</button>
+    <button id="lang-es" aria-pressed="false">Español</button>
+  </div>
+</header>
+
+<div class="who">
+  <label><span data-t="name">Your name</span><input id="nm" autocomplete="off" maxlength="40"></label>
+  <label><span data-t="period">Period</span><input id="pd" autocomplete="off" maxlength="8"></label>
+  <p class="nudge hide" id="nudge" data-t="nudge"></p>
+  <div class="starsbar"><span data-t="stars">Stars</span>: <span id="starCount">0</span> / 7 ⭐</div>
+</div>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" id="tb-explore" data-tab="explore" aria-selected="true" data-t="tabExplore">Explore</button>
+  <button role="tab" id="tb-rules" data-tab="rules" aria-selected="false" data-t="tabRules">Rules</button>
+  <button role="tab" id="tb-predict" data-tab="predict" aria-selected="false" data-t="tabPredict">Predict</button>
+  <button role="tab" id="tb-real" data-tab="real" aria-selected="false" data-t="tabReal">Real life</button>
+</nav>
+
+<!-- EXPLORE -->
+<section class="tab on" id="tab-explore">
+  <div class="panel">
+    <div>
+      <canvas id="exCanvas" width="560" height="560" aria-label="Coordinate grid with a shape and its rotation"></canvas>
+    </div>
+    <div>
+      <div class="card">
+        <h2 data-t="exTitle">Turn the shape</h2>
+        <p class="help" data-t="exHelp"></p>
+        <div class="row" id="shapeBtns">
+          <button class="btn" data-shape="tri" aria-pressed="true" data-t="shapeTri">Triangle</button>
+          <button class="btn" data-shape="L" aria-pressed="false" data-t="shapeL">L shape</button>
+          <button class="btn" data-shape="flag" aria-pressed="false" data-t="shapeFlag">Flag</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3 data-t="angleLbl">Angle</h3>
+        <div class="angle" id="angLabel">0°</div>
+        <input type="range" id="angSlider" min="-360" max="360" step="15" value="0" aria-label="Angle">
+        <div class="row" style="margin-top:8px" id="turnBtns">
+          <button class="btn" data-ang="90" aria-label="90 degrees counterclockwise">↺ 90°</button>
+          <button class="btn" data-ang="180">↺ 180°</button>
+          <button class="btn" data-ang="270" aria-label="270 degrees counterclockwise">↺ 270°</button>
+          <button class="btn" data-ang="-90" aria-label="90 degrees clockwise">↻ 90°</button>
+          <button class="btn" data-ang="-270" aria-label="270 degrees clockwise">↻ 270°</button>
+          <button class="btn" data-ang="0" data-t="reset">Reset</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3 data-t="centerLbl">Center of rotation</h3>
+        <div class="row">
+          <button class="btn" id="centerOrigin" data-t="centerOrigin">Origin (0, 0)</button>
+          <button class="btn" id="centerPick" aria-pressed="false" data-t="centerPick">Pick a center</button>
+        </div>
+        <p class="help" id="centerNow" style="margin-top:8px"></p>
+        <label class="row" style="margin-top:4px"><input type="checkbox" id="showPath" checked> <span data-t="showPath">Show the path</span></label>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th data-t="point">Point</th><th class="pre" data-t="before">Before</th><th class="img" data-t="after">After</th></tr></thead>
+          <tbody id="vtable"></tbody>
+        </table>
+        <div class="rulebox" id="ruleBox"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RULES -->
+<section class="tab" id="tab-rules">
+  <div class="card">
+    <h2 data-t="ruTitle">Rotation rules</h2>
+    <p class="help" data-t="ruHelp"></p>
+  </div>
+  <div class="rules-grid" style="margin-top:14px">
+    <div class="rule">
+      <h3 data-t="ru90">90° ↺</h3>
+      <div class="f">(x, y) → (−y, x)</div>
+      <p class="help" data-t="trick90"></p>
+      <button class="btn primary" data-try="90" data-t="tryIt">Try it</button>
+    </div>
+    <div class="rule">
+      <h3 data-t="ru180">180°</h3>
+      <div class="f">(x, y) → (−x, −y)</div>
+      <p class="help" data-t="trick180"></p>
+      <button class="btn primary" data-try="180" data-t="tryIt">Try it</button>
+    </div>
+    <div class="rule">
+      <h3 data-t="ru270">270° ↺</h3>
+      <div class="f">(x, y) → (y, −x)</div>
+      <p class="help" data-t="trick270"></p>
+      <button class="btn primary" data-try="270" data-t="tryIt">Try it</button>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <p style="margin:0" data-t="ruSame"></p>
+  </div>
+</section>
+
+<!-- PREDICT -->
+<section class="tab" id="tab-predict">
+  <div class="panel">
+    <div>
+      <canvas id="prCanvas" width="560" height="560" aria-label="Coordinate grid. Click where the rotated point lands."></canvas>
+    </div>
+    <div>
+      <div class="card" id="prCard">
+        <h2 data-t="prTitle">Predict where it lands</h2>
+        <div class="prog" id="prProg"></div>
+        <p id="prQ" style="font-size:1.12rem;margin:8px 0"></p>
+        <div class="xy">
+          <label><span data-t="xlbl">x</span><input type="number" id="inX" min="-7" max="7" step="1"></label>
+          <label><span data-t="ylbl">y</span><input type="number" id="inY" min="-7" max="7" step="1"></label>
+          <button class="btn" id="useXY" data-t="useXY">Use x, y</button>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <button class="btn primary" id="prCheck" data-t="check">Check</button>
+          <button class="btn hide" id="prNext" data-t="next">Next</button>
+        </div>
+        <div class="fb" id="prFb" aria-live="polite"></div>
+      </div>
+      <div class="sum hide" id="prSum"></div>
+    </div>
+  </div>
+</section>
+
+<!-- REAL LIFE -->
+<section class="tab" id="tab-real">
+  <div class="card">
+    <h2 data-t="reTitle">Rotations in real life</h2>
+    <p class="help" data-t="reHelp"></p>
+  </div>
+  <div class="real" id="realList" style="margin-top:14px"></div>
+  <div class="sum hide" id="reSum"></div>
+</section>
+
+</div>
+
+<script>
+/* ---------- Text (English / Español) ---------- */
+const T={
+en:{
+ title:"Rotation Station", sub:"Turn shapes. Find the rule. Spot rotations in real life.",
+ name:"Your name", period:"Period", nudge:"Type your name so your teacher can see your work.",
+ stars:"Stars",
+ tabExplore:"Explore", tabRules:"Rules", tabPredict:"Predict", tabReal:"Real life",
+ exTitle:"Turn the shape",
+ exHelp:"Counterclockwise ↺ is positive. Clockwise ↻ is negative. Drag the slider or press a button.",
+ shapeTri:"Triangle", shapeL:"L shape", shapeFlag:"Flag",
+ angleLbl:"Angle", ccw:"counterclockwise", cw:"clockwise", reset:"Reset",
+ centerLbl:"Center of rotation", centerOrigin:"Origin (0, 0)", centerPick:"Pick a center",
+ centerPicking:"Click a point on the grid…", centerNow:"Center: ({cx}, {cy})",
+ showPath:"Show the path",
+ point:"Point", before:"Before", after:"After",
+ ruleLbl:"Rule",
+ ruleOther:"Rules are easiest at 90°, 180° and 270°. Try one of those buttons.",
+ ruleCenter:"Your center is ({cx}, {cy}). Subtract the center, turn, then add the center back.",
+ ruleSame:"The distance to the center never changes.",
+ ruTitle:"Rotation rules (center at the origin)",
+ ruHelp:"Use these when the center of rotation is (0, 0).",
+ ru90:"90° counterclockwise ↺ (same as 270° clockwise ↻)",
+ ru180:"180° (either direction)",
+ ru270:"270° counterclockwise ↺ (same as 90° clockwise ↻)",
+ trick90:"Trick: swap x and y, then change the sign of the new x.",
+ trick180:"Trick: change both signs.",
+ trick270:"Trick: swap x and y, then change the sign of the new y.",
+ ruSame:"A turn clockwise and a turn counterclockwise can end in the same place. 90° clockwise = 270° counterclockwise.",
+ tryIt:"Try it",
+ prTitle:"Predict where it lands",
+ itemOf:"Question {i} of {n}",
+ prQ:"Rotate point P {ang} about {ctr}. Click where P′ lands.",
+ theOrigin:"the origin",
+ xlbl:"x", ylbl:"y", useXY:"Use x, y", check:"Check", next:"Next", finish:"Finish",
+ pickFirst:"Click a point on the grid first.",
+ okMsg:"Yes! P′ is ({x}, {y}).",
+ hintMsg:"Not yet. Hint: the distance from the center stays the same. Turn the arm {ang}, then try again.",
+ revealMsg:"P′ is ({x}, {y}). Watch the turn.",
+ done:"Practice complete", score:"You got {n} of {m} on the first try.", again:"Play again",
+ reTitle:"Rotations in real life", reHelp:"Choose the rotation that matches each picture.",
+ yes:"Correct!", no:"Not quite.",
+ reDone:"Real life: {n} of {m} correct.",
+ labNext:"Next: do the Rotation Lab with real objects.",
+ q1:"🕒 The minute hand of a clock moves from 12 to 3. What rotation is that?",
+ q2:"🕕 The minute hand moves from 12 to 6. What rotation is that?",
+ q3:"🚗 A driver turns the steering wheel a quarter turn to the left. What rotation is that?",
+ q4:"🎡 A Ferris wheel makes one full turn. What rotation is that?",
+ q5:"🚪 A door knob is turned 270° clockwise. Which counterclockwise turn ends in the same place?",
+ o90cw:"90° clockwise ↻", o90ccw:"90° counterclockwise ↺", o180:"180°", o270cw:"270° clockwise ↻", o270ccw:"270° counterclockwise ↺", o360:"360° (full turn)",
+ w1:"The hand turns a quarter of a circle in the same direction as clock hands: 90° clockwise.",
+ w2:"Half a circle is 180°.",
+ w3:"Left is counterclockwise. A quarter turn is 90°.",
+ w4:"A full circle is 360°. Every point lands back on itself.",
+ w5:"360° − 270° = 90°. Three quarters clockwise is one quarter counterclockwise."
+},
+es:{
+ title:"Estación de Rotaciones", sub:"Gira figuras. Encuentra la regla. Descubre rotaciones en la vida real.",
+ name:"Tu nombre", period:"Período", nudge:"Escribe tu nombre para que tu maestro vea tu trabajo.",
+ stars:"Estrellas",
+ tabExplore:"Explorar", tabRules:"Reglas", tabPredict:"Predecir", tabReal:"Vida real",
+ exTitle:"Gira la figura",
+ exHelp:"En sentido contrario a las agujas del reloj ↺ es positivo. En sentido de las agujas ↻ es negativo. Mueve la barra o presiona un botón.",
+ shapeTri:"Triángulo", shapeL:"Forma de L", shapeFlag:"Bandera",
+ angleLbl:"Ángulo", ccw:"en sentido contrario a las agujas del reloj", cw:"en sentido de las agujas del reloj", reset:"Reiniciar",
+ centerLbl:"Centro de rotación", centerOrigin:"Origen (0, 0)", centerPick:"Elegir un centro",
+ centerPicking:"Haz clic en un punto de la cuadrícula…", centerNow:"Centro: ({cx}, {cy})",
+ showPath:"Mostrar el recorrido",
+ point:"Punto", before:"Antes", after:"Después",
+ ruleLbl:"Regla",
+ ruleOther:"Las reglas son más fáciles con 90°, 180° y 270°. Prueba uno de esos botones.",
+ ruleCenter:"Tu centro es ({cx}, {cy}). Resta el centro, gira y luego suma el centro de nuevo.",
+ ruleSame:"La distancia al centro nunca cambia.",
+ ruTitle:"Reglas de rotación (centro en el origen)",
+ ruHelp:"Úsalas cuando el centro de rotación es (0, 0).",
+ ru90:"90° en sentido contrario a las agujas ↺ (igual que 270° en sentido de las agujas ↻)",
+ ru180:"180° (en cualquier dirección)",
+ ru270:"270° en sentido contrario a las agujas ↺ (igual que 90° en sentido de las agujas ↻)",
+ trick90:"Truco: cambia de lugar x e y, y luego cambia el signo de la nueva x.",
+ trick180:"Truco: cambia los dos signos.",
+ trick270:"Truco: cambia de lugar x e y, y luego cambia el signo de la nueva y.",
+ ruSame:"Un giro en sentido de las agujas y uno en sentido contrario pueden terminar en el mismo lugar. 90° en sentido de las agujas = 270° en sentido contrario.",
+ tryIt:"Probar",
+ prTitle:"Predice dónde cae",
+ itemOf:"Pregunta {i} de {n}",
+ prQ:"Rota el punto P {ang} alrededor de {ctr}. Haz clic donde cae P′.",
+ theOrigin:"el origen",
+ xlbl:"x", ylbl:"y", useXY:"Usar x, y", check:"Comprobar", next:"Siguiente", finish:"Terminar",
+ pickFirst:"Primero haz clic en un punto de la cuadrícula.",
+ okMsg:"¡Sí! P′ es ({x}, {y}).",
+ hintMsg:"Todavía no. Pista: la distancia al centro no cambia. Gira el brazo {ang} e inténtalo de nuevo.",
+ revealMsg:"P′ es ({x}, {y}). Mira el giro.",
+ done:"Práctica completa", score:"Acertaste {n} de {m} en el primer intento.", again:"Jugar otra vez",
+ reTitle:"Rotaciones en la vida real", reHelp:"Elige la rotación que corresponde a cada imagen.",
+ yes:"¡Correcto!", no:"Todavía no.",
+ reDone:"Vida real: {n} de {m} correctas.",
+ labNext:"Siguiente: haz el Laboratorio de Rotaciones con objetos reales.",
+ q1:"🕒 El minutero de un reloj se mueve del 12 al 3. ¿Qué rotación es?",
+ q2:"🕕 El minutero se mueve del 12 al 6. ¿Qué rotación es?",
+ q3:"🚗 Un conductor gira el volante un cuarto de vuelta a la izquierda. ¿Qué rotación es?",
+ q4:"🎡 Una rueda de la fortuna da una vuelta completa. ¿Qué rotación es?",
+ q5:"🚪 Se gira una perilla 270° en sentido de las agujas del reloj. ¿Qué giro en sentido contrario termina en el mismo lugar?",
+ o90cw:"90° en sentido de las agujas ↻", o90ccw:"90° en sentido contrario ↺", o180:"180°", o270cw:"270° en sentido de las agujas ↻", o270ccw:"270° en sentido contrario ↺", o360:"360° (vuelta completa)",
+ w1:"El minutero gira un cuarto de círculo en la dirección de las agujas del reloj: 90° en ese sentido.",
+ w2:"Medio círculo son 180°.",
+ w3:"La izquierda es en sentido contrario a las agujas. Un cuarto de vuelta son 90°.",
+ w4:"Un círculo completo son 360°. Cada punto vuelve a su lugar.",
+ w5:"360° − 270° = 90°. Tres cuartos en sentido de las agujas son un cuarto en sentido contrario."
+}};
+let lang=(function(){try{return localStorage.getItem('rot_lang')||'en'}catch(e){return 'en'}})();
+function t(k,v){let s=(T[lang]&&T[lang][k]!=null)?T[lang][k]:(T.en[k]!=null?T.en[k]:k);
+  if(v){for(const x in v){s=s.split('{'+x+'}').join(v[x]);}} return s;}
+function angPhrase(a){ if(a===0) return '0°'; return Math.abs(a)+'° '+(a>0?t('ccw'):t('cw')); }
+
+/* ---------- Logging (webhook config is at the bottom: window.LOGGER) ---------- */
+function getName(){try{return localStorage.getItem('rot_student')||''}catch(e){return ''}}
+function getPeriod(){try{return localStorage.getItem('rot_period')||''}catch(e){return ''}}
+function log(event,section,item,correct,stars,text){
+  const L=window.LOGGER; if(!L||!L.enabled) return;
+  const p={app:L.app,student:getName(),period:getPeriod(),event:event,
+    section:section||'',item:(item==null?'':item),station:section||'',stageIndex:(item==null?'':item),
+    correct:(correct==null||correct==='')?'':correct,stars:(stars==null||stars==='')?'':stars,
+    text:text||'',wordCount:text?String(text).trim().split(/\s+/).length:0};
+  try{fetch(L.url,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p)}).catch(function(){});}catch(e){}
+}
+
+/* ---------- Math + canvas helpers ---------- */
+const R=7, W=560, S=W/(2*R);
+const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function rot(p,c,deg){
+  const r=deg*Math.PI/180, co=Math.cos(r), si=Math.sin(r);
+  const dx=p[0]-c.x, dy=p[1]-c.y;
+  const x=c.x+dx*co-dy*si, y=c.y+dx*si+dy*co;
+  return [Math.round(x*1e9)/1e9, Math.round(y*1e9)/1e9];
+}
+function fmt(n){const v=Math.round(n*10)/10; return String(v===0?0:v).replace('-','−');}
+function px(x,y){return [(x+R)*S,(R-y)*S];}
+function drawGrid(ctx){
+  ctx.clearRect(0,0,W,W); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,W);
+  ctx.lineWidth=1; ctx.strokeStyle='#DDE4EE';
+  for(let i=-R;i<=R;i++){ if(i===0) continue;
+    const a=px(i,-R), b=px(i,R); ctx.beginPath(); ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); ctx.stroke();
+    const c=px(-R,i), d=px(R,i); ctx.beginPath(); ctx.moveTo(c[0],c[1]); ctx.lineTo(d[0],d[1]); ctx.stroke(); }
+  ctx.strokeStyle='#14213D'; ctx.lineWidth=2;
+  let a=px(0,-R), b=px(0,R); ctx.beginPath(); ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); ctx.stroke();
+  a=px(-R,0); b=px(R,0); ctx.beginPath(); ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); ctx.stroke();
+  ctx.fillStyle='#4E5F78'; ctx.font='13px sans-serif'; ctx.textAlign='center';
+  const o=px(0,0);
+  for(let i=-R+1;i<=R-1;i++){ if(i===0) continue;
+    const p=px(i,0); ctx.fillText(String(i).replace('-','−'),p[0],o[1]+16);
+    const q=px(0,i); ctx.textAlign='right'; ctx.fillText(String(i).replace('-','−'),o[0]-6,q[1]+4); ctx.textAlign='center'; }
+}
+function poly(ctx,pts,fill,stroke,dash,lw){
+  ctx.beginPath(); pts.forEach(function(p,i){const q=px(p[0],p[1]); if(i===0) ctx.moveTo(q[0],q[1]); else ctx.lineTo(q[0],q[1]);});
+  ctx.closePath(); ctx.fillStyle=fill; ctx.fill(); ctx.setLineDash(dash||[]); ctx.strokeStyle=stroke; ctx.lineWidth=lw||2; ctx.stroke(); ctx.setLineDash([]);
+}
+function labelPts(ctx,pts,names,color){
+  const cx=pts.reduce(function(s,p){return s+p[0]},0)/pts.length, cy=pts.reduce(function(s,p){return s+p[1]},0)/pts.length;
+  ctx.fillStyle=color; ctx.font='bold 17px sans-serif'; ctx.textAlign='center';
+  pts.forEach(function(p,i){
+    let dx=p[0]-cx, dy=p[1]-cy; const m=Math.hypot(dx,dy)||1; dx/=m; dy/=m;
+    const q=px(p[0],p[1]); ctx.fillText(names[i],q[0]+dx*17,q[1]-dy*17+6);
+  });
+}
+function dot(ctx,p,r,fill,stroke){const q=px(p[0],p[1]); ctx.beginPath(); ctx.arc(q[0],q[1],r,0,Math.PI*2); ctx.fillStyle=fill; ctx.fill(); if(stroke){ctx.strokeStyle=stroke; ctx.lineWidth=2.5; ctx.stroke();}}
+function centerMark(ctx,c){
+  const q=px(c.x,c.y); ctx.beginPath(); ctx.arc(q[0],q[1],11,0,Math.PI*2); ctx.fillStyle='rgba(242,169,0,.35)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(q[0],q[1],6,0,Math.PI*2); ctx.fillStyle='#F2A900'; ctx.fill(); ctx.strokeStyle='#14213D'; ctx.lineWidth=2; ctx.stroke();
+}
+function arcPath(ctx,p,c,a,alpha){
+  const dx=p[0]-c.x, dy=p[1]-c.y, r=Math.hypot(dx,dy); if(r<1e-6||a===0) return;
+  const phi=Math.atan2(dy,dx), q=px(c.x,c.y);
+  ctx.beginPath(); ctx.arc(q[0],q[1],r*S,-phi,-(phi+a*Math.PI/180),a>0);
+  ctx.setLineDash([5,5]); ctx.strokeStyle='rgba(214,51,108,'+alpha+')'; ctx.lineWidth=2; ctx.stroke(); ctx.setLineDash([]);
+}
+function gridPoint(canvas,e){
+  const rect=canvas.getBoundingClientRect();
+  const x=(e.clientX-rect.left)*canvas.width/rect.width, y=(e.clientY-rect.top)*canvas.height/rect.height;
+  return {x:Math.max(-R,Math.min(R,Math.round(x/S-R))), y:Math.max(-R,Math.min(R,Math.round(R-y/S)))};
+}
+function tween(from,to,ms,onFrame,onDone){
+  if(reduce||from===to){onFrame(to); if(onDone) onDone(); return function(){};}
+  let stop=false, t0=performance.now();
+  function step(now){ if(stop) return; let k=Math.min(1,(now-t0)/ms); const e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+    onFrame(from+(to-from)*e); if(k<1) requestAnimationFrame(step); else if(onDone) onDone(); }
+  requestAnimationFrame(step); return function(){stop=true;};
+}
+
+/* ---------- Stars ---------- */
+const stars={explore:0,predict:0,real:0};
+function updateStars(){document.getElementById('starCount').textContent=stars.explore+stars.predict+stars.real;}
+function starsFor(n,m){const f=n/m; return f>=.85?3:(f>=.6?2:1);}
+
+/* ---------- Tabs ---------- */
+function showTab(name){
+  document.querySelectorAll('.tab').forEach(function(s){s.classList.toggle('on',s.id==='tab-'+name);});
+  document.querySelectorAll('nav.tabs button').forEach(function(b){b.setAttribute('aria-selected',b.dataset.tab===name?'true':'false');});
+  if(name==='explore') drawExplore(); if(name==='predict') drawPredict();
+}
+document.querySelectorAll('nav.tabs button').forEach(function(b){b.addEventListener('click',function(){showTab(b.dataset.tab); log('tab',b.dataset.tab,null,'','','');});});
+
+/* ---------- EXPLORE ---------- */
+const SHAPES={
+  tri:[[1,1],[3,1],[1,4]],
+  L:[[1,1],[3,1],[3,2],[2,2],[2,4],[1,4]],
+  flag:[[1,1],[1,5],[4,4],[1,3]]
+};
+const NAMES=['A','B','C','D','E','F'];
+const exCanvas=document.getElementById('exCanvas'), exCtx=exCanvas.getContext('2d');
+const ex={shape:'tri',c:{x:0,y:0},angle:0,pick:false,cancel:null,tried:{},showPath:true};
+function drawExplore(){
+  const ctx=exCtx; drawGrid(ctx);
+  const base=SHAPES[ex.shape], a=ex.angle, c=ex.c;
+  const img=base.map(function(p){return rot(p,c,a);});
+  poly(ctx,base,'rgba(124,138,165,.22)','#7C8AA5',[6,4],2);
+  if(ex.showPath&&a!==0){ base.forEach(function(p,i){arcPath(ctx,p,c,a,i===0?.95:.4);});
+    const q=px(c.x,c.y), z=px(img[0][0],img[0][1]); ctx.beginPath(); ctx.moveTo(q[0],q[1]); ctx.lineTo(z[0],z[1]); ctx.setLineDash([2,4]); ctx.strokeStyle='#D6336C'; ctx.lineWidth=2; ctx.stroke(); ctx.setLineDash([]); }
+  poly(ctx,img,'rgba(214,51,108,.30)','#D6336C',[],3);
+  labelPts(ctx,base,NAMES,'#5E6C86');
+  if(a!==0) labelPts(ctx,img,NAMES.map(function(n){return n+'′';}),'#D6336C');
+  centerMark(ctx,c);
+}
+function ruleText(){
+  const a=Math.round(ex.angle), box=document.getElementById('ruleBox');
+  const o=ex.c.x===0&&ex.c.y===0;
+  let html='';
+  if(o&&a%90===0){
+    const n=((a%360)+360)%360;
+    const f={0:'(x, y) → (x, y)',90:'(x, y) → (−y, x)',180:'(x, y) → (−x, −y)',270:'(x, y) → (y, −x)'}[n];
+    html='<b>'+t('ruleLbl')+':</b> '+f+'<br>'+t('ruleSame');
+  } else if(!o){ html=t('ruleCenter',{cx:ex.c.x,cy:ex.c.y})+'<br>'+t('ruleSame'); }
+  else { html=t('ruleOther'); }
+  box.innerHTML=html;
+}
+function syncExplore(){
+  document.getElementById('angLabel').textContent=angPhrase(Math.round(ex.angle));
+  document.getElementById('angSlider').value=Math.max(-360,Math.min(360,Math.round(ex.angle)));
+  document.getElementById('centerNow').textContent=ex.pick?t('centerPicking'):t('centerNow',{cx:ex.c.x,cy:ex.c.y});
+  const tb=document.getElementById('vtable'); tb.innerHTML='';
+  SHAPES[ex.shape].forEach(function(p,i){
+    const q=rot(p,ex.c,ex.angle), tr=document.createElement('tr');
+    tr.innerHTML='<td><b>'+NAMES[i]+'</b></td><td class="pre">('+fmt(p[0])+', '+fmt(p[1])+')</td><td class="img">('+fmt(q[0])+', '+fmt(q[1])+')</td>';
+    tb.appendChild(tr);
+  });
+  ruleText(); drawExplore();
+}
+function exAnimate(target){
+  if(ex.cancel) ex.cancel();
+  const from=ex.angle, ms=Math.min(1400,450+Math.abs(target-from)*4);
+  ex.cancel=tween(from,target,ms,function(v){ex.angle=v; syncExplore();},function(){ex.angle=target; syncExplore(); noteTried(target);});
+}
+function noteTried(a){
+  log('turn','explore',a,'', '', 'shape '+ex.shape+'; center '+ex.c.x+','+ex.c.y);
+  ex.tried[a]=true;
+  if(stars.explore===0&&Object.keys(ex.tried).filter(function(k){return +k!==0;}).length>=4){
+    stars.explore=1; updateStars(); log('explore_done','explore',null,'',1,'');
+  }
+}
+document.querySelectorAll('#turnBtns .btn').forEach(function(b){b.addEventListener('click',function(){exAnimate(+b.dataset.ang);});});
+document.getElementById('angSlider').addEventListener('input',function(e){ if(ex.cancel) ex.cancel(); ex.angle=+e.target.value; syncExplore(); });
+document.getElementById('angSlider').addEventListener('change',function(e){ noteTried(+e.target.value); });
+document.querySelectorAll('#shapeBtns .btn').forEach(function(b){b.addEventListener('click',function(){
+  ex.shape=b.dataset.shape; document.querySelectorAll('#shapeBtns .btn').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false');});
+  log('shape','explore',ex.shape,'','',''); syncExplore(); });});
+document.getElementById('centerOrigin').addEventListener('click',function(){ex.c={x:0,y:0}; ex.pick=false; document.getElementById('centerPick').setAttribute('aria-pressed','false'); log('center','explore','0,0','','',''); syncExplore();});
+document.getElementById('centerPick').addEventListener('click',function(e){ex.pick=!ex.pick; e.currentTarget.setAttribute('aria-pressed',ex.pick?'true':'false'); syncExplore();});
+document.getElementById('showPath').addEventListener('change',function(e){ex.showPath=e.target.checked; syncExplore();});
+exCanvas.addEventListener('click',function(e){ if(!ex.pick) return; const g=gridPoint(exCanvas,e); ex.c={x:g.x,y:g.y}; ex.pick=false;
+  document.getElementById('centerPick').setAttribute('aria-pressed','false'); log('center','explore',g.x+','+g.y,'','',''); syncExplore(); });
+document.querySelectorAll('[data-try]').forEach(function(b){b.addEventListener('click',function(){
+  ex.c={x:0,y:0}; ex.shape='tri'; ex.angle=0; ex.pick=false;
+  document.querySelectorAll('#shapeBtns .btn').forEach(function(x){x.setAttribute('aria-pressed',x.dataset.shape==='tri'?'true':'false');});
+  document.getElementById('centerPick').setAttribute('aria-pressed','false');
+  showTab('explore'); syncExplore(); log('try_rule','rules',b.dataset.try,'','',''); exAnimate(+b.dataset.try); });});
+
+/* ---------- PREDICT ---------- */
+const PR=[
+  {p:[2,1],a:90},{p:[3,2],a:180},{p:[-2,3],a:-90},{p:[1,-4],a:270},
+  {p:[-3,-1],a:90},{p:[4,-2],a:180},{p:[4,1],a:90,c:[1,1]},{p:[3,3],a:180,c:[1,1]}
+];
+const prCanvas=document.getElementById('prCanvas'), prCtx=prCanvas.getContext('2d');
+const pr={i:0,sel:null,attempts:0,state:'ask',first:0,revealAngle:0,cancel:null};
+function prCenter(it){return it.c?{x:it.c[0],y:it.c[1]}:{x:0,y:0};}
+function prAns(it){const q=rot(it.p,prCenter(it),it.a); return [Math.round(q[0]),Math.round(q[1])];}
+function drawPredict(){
+  const ctx=prCtx; drawGrid(ctx); if(pr.i>=PR.length) return;
+  const it=PR[pr.i], c=prCenter(it);
+  const cq=px(c.x,c.y), pq=px(it.p[0],it.p[1]);
+  ctx.beginPath(); ctx.moveTo(cq[0],cq[1]); ctx.lineTo(pq[0],pq[1]); ctx.setLineDash([6,5]); ctx.strokeStyle='#7C8AA5'; ctx.lineWidth=2; ctx.stroke(); ctx.setLineDash([]);
+  if(pr.state==='done'||pr.revealAngle!==0){
+    const a=pr.revealAngle, q=rot(it.p,c,a);
+    arcPath(ctx,it.p,c,a,.95);
+    const iq=px(q[0],q[1]); ctx.beginPath(); ctx.moveTo(cq[0],cq[1]); ctx.lineTo(iq[0],iq[1]); ctx.setLineDash([2,4]); ctx.strokeStyle='#D6336C'; ctx.lineWidth=2; ctx.stroke(); ctx.setLineDash([]);
+    dot(ctx,q,9,'#D6336C','#fff');
+    if(pr.state==='done'&&a===it.a){ ctx.fillStyle='#D6336C'; ctx.font='bold 17px sans-serif'; ctx.textAlign='left'; ctx.fillText('P′ ('+fmt(q[0])+', '+fmt(q[1])+')',iq[0]+12,iq[1]-10); }
+  }
+  centerMark(ctx,c);
+  dot(ctx,it.p,8,'#5E6C86','#fff');
+  ctx.fillStyle='#5E6C86'; ctx.font='bold 17px sans-serif'; ctx.textAlign='left'; ctx.fillText('P',pq[0]+12,pq[1]-10);
+  if(pr.sel&&pr.state==='ask'){ const sq=px(pr.sel.x,pr.sel.y); ctx.beginPath(); ctx.arc(sq[0],sq[1],11,0,Math.PI*2); ctx.fillStyle='rgba(36,87,214,.25)'; ctx.fill(); ctx.strokeStyle='#2457D6'; ctx.lineWidth=3; ctx.stroke();
+    ctx.fillStyle='#2457D6'; ctx.font='bold 15px sans-serif'; ctx.textAlign='left'; ctx.fillText('('+fmt(pr.sel.x)+', '+fmt(pr.sel.y)+')',sq[0]+14,sq[1]+5); }
+}
+function fb(msg,cls){const e=document.getElementById('prFb'); e.textContent=msg||''; e.className='fb'+(cls?' '+cls:'');}
+function renderPredict(){
+  const sum=document.getElementById('prSum'), card=document.getElementById('prCard');
+  if(pr.i>=PR.length){ card.classList.add('hide'); sum.classList.remove('hide'); drawPredict(); return; }
+  card.classList.remove('hide'); sum.classList.add('hide');
+  const it=PR[pr.i];
+  document.getElementById('prProg').textContent=t('itemOf',{i:pr.i+1,n:PR.length});
+  const ctr=it.c?'('+it.c[0]+', '+it.c[1]+')':t('theOrigin');
+  document.getElementById('prQ').textContent=t('prQ',{ang:angPhrase(it.a),ctr:ctr});
+  document.getElementById('inX').value=pr.sel?pr.sel.x:''; document.getElementById('inY').value=pr.sel?pr.sel.y:'';
+  const done=pr.state==='done';
+  document.getElementById('prCheck').classList.toggle('hide',done);
+  const nx=document.getElementById('prNext'); nx.classList.toggle('hide',!done); nx.textContent=(pr.i===PR.length-1)?t('finish'):t('next');
+  drawPredict();
+}
+function setSel(x,y){ if(pr.state!=='ask') return; pr.sel={x:Math.max(-R,Math.min(R,x)),y:Math.max(-R,Math.min(R,y))};
+  document.getElementById('inX').value=pr.sel.x; document.getElementById('inY').value=pr.sel.y; drawPredict(); }
+prCanvas.addEventListener('click',function(e){const g=gridPoint(prCanvas,e); setSel(g.x,g.y);});
+document.getElementById('useXY').addEventListener('click',function(){
+  const x=parseInt(document.getElementById('inX').value,10), y=parseInt(document.getElementById('inY').value,10);
+  if(isNaN(x)||isNaN(y)){fb(t('pickFirst'),'warn'); return;} setSel(x,y); });
+function prReveal(){
+  const it=PR[pr.i]; pr.state='done'; pr.revealAngle=0;
+  document.getElementById('prCheck').classList.add('hide');
+  const nx=document.getElementById('prNext'); nx.classList.remove('hide'); nx.textContent=(pr.i===PR.length-1)?t('finish'):t('next');
+  if(pr.cancel) pr.cancel();
+  pr.cancel=tween(0,it.a,Math.min(1600,600+Math.abs(it.a)*4),function(v){pr.revealAngle=v; drawPredict();},function(){pr.revealAngle=it.a; drawPredict();});
+}
+document.getElementById('prCheck').addEventListener('click',function(){
+  let x=pr.sel?pr.sel.x:null, y=pr.sel?pr.sel.y:null;
+  if(x==null){ const ix=parseInt(document.getElementById('inX').value,10), iy=parseInt(document.getElementById('inY').value,10);
+    if(!isNaN(ix)&&!isNaN(iy)){ setSel(ix,iy); x=pr.sel.x; y=pr.sel.y; } }
+  if(x==null){fb(t('pickFirst'),'warn'); return;}
+  const it=PR[pr.i], ans=prAns(it), ok=(x===ans[0]&&y===ans[1]);
+  pr.attempts++;
+  log('answer','predict',pr.i+1,ok,'','clicked ('+x+','+y+'); answer ('+ans[0]+','+ans[1]+'); attempt '+pr.attempts);
+  if(ok){ if(pr.attempts===1) pr.first++; fb(t('okMsg',{x:fmt(ans[0]),y:fmt(ans[1])}),'ok'); prReveal(); }
+  else if(pr.attempts>=2){ fb(t('revealMsg',{x:fmt(ans[0]),y:fmt(ans[1])}),'bad'); prReveal(); }
+  else { fb(t('hintMsg',{ang:angPhrase(it.a)}),'warn'); pr.sel=null; document.getElementById('inX').value=''; document.getElementById('inY').value=''; drawPredict(); }
+});
+document.getElementById('prNext').addEventListener('click',function(){
+  pr.i++; pr.sel=null; pr.attempts=0; pr.state='ask'; pr.revealAngle=0; fb('','');
+  if(pr.i>=PR.length){ const s=starsFor(pr.first,PR.length); stars.predict=Math.max(stars.predict,s); updateStars();
+    log('practice_done','predict',null,'',s,'first-try '+pr.first+'/'+PR.length); renderSummary(); }
+  renderPredict();
+});
+function renderSummary(){
+  const s=starsFor(pr.first,PR.length), sum=document.getElementById('prSum');
+  sum.innerHTML='<div>'+t('done')+' '+'⭐'.repeat(s)+'</div><div style="font-weight:400;margin:6px 0 10px">'+t('score',{n:pr.first,m:PR.length})+'</div><button class="btn primary" id="prAgain">'+t('again')+'</button>';
+  document.getElementById('prAgain').addEventListener('click',function(){pr.i=0;pr.first=0;pr.sel=null;pr.attempts=0;pr.state='ask';pr.revealAngle=0;fb('','');log('replay','predict',null,'','','');renderPredict();});
+}
+
+/* ---------- REAL LIFE ---------- */
+const RL=[
+  {q:'q1',opts:['o90cw','o90ccw','o180','o360'],ans:'o90cw',w:'w1'},
+  {q:'q2',opts:['o90cw','o180','o270cw','o360'],ans:'o180',w:'w2'},
+  {q:'q3',opts:['o90cw','o90ccw','o180','o360'],ans:'o90ccw',w:'w3'},
+  {q:'q4',opts:['o90ccw','o180','o270cw','o360'],ans:'o360',w:'w4'},
+  {q:'q5',opts:['o90ccw','o180','o270ccw','o90cw'],ans:'o90ccw',w:'w5'}
+];
+const rl={answers:{},correct:0};
+function renderReal(){
+  const list=document.getElementById('realList'); list.innerHTML='';
+  RL.forEach(function(it,i){
+    const d=document.createElement('div'); d.className='q';
+    const p=document.createElement('p'); p.textContent=t(it.q); d.appendChild(p);
+    const o=document.createElement('div'); o.className='opts';
+    const given=rl.answers[i];
+    it.opts.forEach(function(k){
+      const b=document.createElement('button'); b.className='btn'; b.textContent=t(k);
+      if(given){ b.disabled=true; if(k===it.ans) b.classList.add('right'); else if(k===given) b.classList.add('wrong'); }
+      b.addEventListener('click',function(){ if(rl.answers[i]) return; rl.answers[i]=k; const ok=(k===it.ans); if(ok) rl.correct++;
+        log('answer','real',i+1,ok,'',k+' (answer '+it.ans+')'); renderReal();
+        if(Object.keys(rl.answers).length===RL.length){ const s=starsFor(rl.correct,RL.length); stars.real=Math.max(stars.real,s); updateStars(); log('real_done','real',null,'',s,rl.correct+'/'+RL.length); } });
+      o.appendChild(b);
+    });
+    d.appendChild(o);
+    if(given){ const f=document.createElement('div'); const ok=given===it.ans; f.className='fb '+(ok?'ok':'bad'); f.textContent=(ok?t('yes'):t('no'))+' '+t(it.w); d.appendChild(f); }
+    list.appendChild(d);
+  });
+  const sum=document.getElementById('reSum');
+  if(Object.keys(rl.answers).length===RL.length){ sum.classList.remove('hide'); sum.innerHTML='<div>'+t('reDone',{n:rl.correct,m:RL.length})+' '+'⭐'.repeat(starsFor(rl.correct,RL.length))+'</div><div style="font-weight:400;margin-top:6px">'+t('labNext')+'</div>'; }
+  else sum.classList.add('hide');
+}
+
+/* ---------- Language + identity + init ---------- */
+function applyLang(){
+  document.documentElement.lang=lang;
+  document.querySelectorAll('[data-t]').forEach(function(e){e.textContent=t(e.dataset.t);});
+  document.getElementById('lang-en').setAttribute('aria-pressed',lang==='en'?'true':'false');
+  document.getElementById('lang-es').setAttribute('aria-pressed',lang==='es'?'true':'false');
+  document.title=t('title');
+  syncExplore(); renderPredict(); renderReal();
+  if(pr.i>=PR.length) renderSummary();
+}
+['en','es'].forEach(function(l){document.getElementById('lang-'+l).addEventListener('click',function(){
+  lang=l; try{localStorage.setItem('rot_lang',l);}catch(e){} applyLang(); log('language','',l,'','',''); });});
+const nm=document.getElementById('nm'), pd=document.getElementById('pd');
+nm.value=getName(); pd.value=getPeriod();
+function nudge(){document.getElementById('nudge').classList.toggle('hide',!!nm.value.trim());}
+nm.addEventListener('input',function(){try{localStorage.setItem('rot_student',nm.value.trim());}catch(e){} nudge();});
+pd.addEventListener('input',function(){try{localStorage.setItem('rot_period',pd.value.trim());}catch(e){}});
+nm.addEventListener('change',function(){ if(nm.value.trim()) log('identify','',null,'','',''); });
+nudge(); applyLang(); updateStars();
+window.addEventListener('load',function(){ log('open','',null,'','',''); });
+</script>
+
+<!-- ===== Classroom Logger (Google Sheet "Classroom logger bms 2026", tab "Log") =====
+     Set enabled:false to turn logging off for this file. Logging only works when the page is served
+     from GitHub Pages or opened as a local file (not inside a Claude artifact preview). -->
+<script>
+window.LOGGER={
+  enabled:true,
+  url:'https://script.google.com/macros/s/AKfycbwV7Hd_JRL54Xbxm2tiAFx3kWm_WFO5nxSotzCD0PiAuEYtx4Z3AlTQ3UwwJYrsOKS6/exec',
+  app:'geo-rotation-station'
+};
+</script>
+</body>
+</html>
